@@ -16,12 +16,12 @@ int main(){
     LQuadTree image(mat);
     image.showListItems();
 
-    std::vector<std::vector<float>>* compressed = image.compress();
+    std::vector<std::vector<float>*>* compressed = image.compress();
     for (size_t i = 0; i < compressed->size(); i++)
     {
-        for (size_t j = 0; j < (*compressed)[0].size(); j++)
+        for (size_t j = 0; j < (*compressed)[0]->size(); j++)
         {
-            std::cout << (*compressed)[i][j] << " ";
+            std::cout << (*(*compressed)[i])[j] << " ";
         }
         std::cout << std::endl;
     }

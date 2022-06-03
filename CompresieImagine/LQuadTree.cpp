@@ -36,8 +36,7 @@ void LQuadTree::divide(Node*& parent) {
 	}
 }
 
-bool LQuadTree::shallDivide(Node* parent)
-{
+bool LQuadTree::shallDivide(Node*& parent) {
 	int firstElem = pixelMatrix[parent->info.upperLeftCorner.y][parent->info.upperLeftCorner.x];
 	for (int i = parent->info.upperLeftCorner.y; i < parent->info.upperLeftCorner.y + parent->info.edge; i++) {
 		for (int j = parent->info.upperLeftCorner.x; j < parent->info.upperLeftCorner.x + parent->info.edge; j++) {
@@ -49,7 +48,7 @@ bool LQuadTree::shallDivide(Node* parent)
 	return false;
 }
 
-LQuadTree::Node* LQuadTree::constructNode(Node* parent, std::vector<int>& code, int addX, int addY) {
+LQuadTree::Node* LQuadTree::constructNode(Node*& parent, std::vector<int>& code, int addX, int addY) {
 	return new Node(
 		parent->level + 1,
 		Node::Info(Point2D(parent->info.upperLeftCorner.x + addX, parent->info.upperLeftCorner.y + addY), parent->info.edge / 2),
@@ -57,10 +56,13 @@ LQuadTree::Node* LQuadTree::constructNode(Node* parent, std::vector<int>& code, 
 	);
 }
 
-std::vector<std::vector<float>>* LQuadTree::compress(PERCENTAGE percentage) {
+std::vector<std::vector<float>*>* LQuadTree::compress(PERCENTAGE percentage) {
 	int newMatrixSize = pixelMatrix.size() / percentage;
-	auto compressedImage = new std::vector<std::vector<float>>(newMatrixSize, std::vector<float>(newMatrixSize));
-	std::vector<Node*>* nodes = createLeafsCompressedImage(percentage);
+	auto compressedImage = new std::vector<std::vector<float>*>(newMatrixSize);
+	for (int i = 0; i < compressedImage->size(); ++i) {
+		(*compressedImage)[i] = new std::vector<float>(newMatrixSize);
+	}
+	std::vector<Node*>* nodes = createLeavesCompressedImage(percentage);
 	
 	int yAxis, xAxis, newEdge;
 	for (auto it = nodes->begin(); it != nodes->end(); ++it) {
@@ -70,16 +72,15 @@ std::vector<std::vector<float>>* LQuadTree::compress(PERCENTAGE percentage) {
 
 		for (int i = yAxis; i < yAxis + newEdge; ++i) {
 			for (int j = xAxis; j < xAxis + newEdge; ++j) {
-				(*compressedImage)[i][j] = (*it)->color;
+				(*(*compressedImage)[i])[j] = (*it)->color;
 			}
 		}
 	}
 
-	delete nodes;
 	return compressedImage;
 }
 
-std::vector<LQuadTree::Node*>* LQuadTree::createLeafsCompressedImage(PERCENTAGE percentage) {
+std::vector<LQuadTree::Node*>* LQuadTree::createLeavesCompressedImage(PERCENTAGE percentage) {
 	auto nodes = new std::vector<Node*>();
 	std::vector<int> currentIndexInLevel(codeSize + 1);
 	std::vector<Node*> neighbours(VIER);

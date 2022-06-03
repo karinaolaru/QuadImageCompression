@@ -140,9 +140,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CompresieImagine.cpp" />
+    <ClCompile Include="Image.cpp" />
     <ClCompile Include="LQuadTree.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Image.h" />
     <ClInclude Include="LQuadTree.h" />
   </ItemGroup>
   <ItemGroup>

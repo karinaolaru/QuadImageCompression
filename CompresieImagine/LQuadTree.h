@@ -50,7 +50,7 @@ public:
 			this->code = std::move(node.code);
 		}
 		std::vector<std::vector<int>>* split() {
-			std::vector<std::vector<int>>* children = new std::vector<std::vector<int>>(VIER, this->code);
+			auto children = new std::vector<std::vector<int>>(VIER, std::vector<int>(this->code));
 			for (int i = 1; i < VIER; i++){
 				(*children)[i][this->level] += i;
 			}
@@ -60,20 +60,19 @@ public:
 
 	LQuadTree(const std::vector<std::vector<float>>&);
 	friend std::istream& operator>>(std::istream&, LQuadTree&);
-	std::vector<std::vector<float>>* compress(PERCENTAGE = PERCENTAGE::LOW);
+	std::vector<std::vector<float>*>* compress(PERCENTAGE = PERCENTAGE::LOW);
 	void construct(const std::vector<std::vector<float>>&); 
 	void showListItems();
 
-private:
+protected:
 	int codeSize;
 	std::list<Node*> leafNodes;
-	std::vector<std::vector<float>> pixelMatrix;
 
 	void divide(Node*&);
-	bool shallDivide(Node*);
-	Node* constructNode(Node*, std::vector<int>&, int = 0, int = 0);
+	bool shallDivide(Node*&);
+	Node* constructNode(Node*&, std::vector<int>&, int = 0, int = 0);
 	Node* mergeNodes(const std::vector<Node*>& nodes);
-	std::vector<Node*>* createLeafsCompressedImage(PERCENTAGE);
+	std::vector<Node*>* createLeavesCompressedImage(PERCENTAGE);
 	//std::vector<Node*>* findNeighbours(std::list<Node*>::iterator&);
 };
 
