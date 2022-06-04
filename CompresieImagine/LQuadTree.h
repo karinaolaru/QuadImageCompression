@@ -42,12 +42,12 @@ public:
 		std::vector<int> code;
 		float color;
 		
-		Node(int level, Info info, std::vector<int> code) : level(level), info(info), code(std::move(code)) {}
+		Node(int level, Info info, std::vector<int> code) : level(level), info(info), code(std::move(code)), color(0) {}
 		Node(const Node& node) {
 			this->level = node.level;
 			this->info = node.info;
 			this->color = node.color;
-			this->code = std::move(node.code);
+			this->code = node.code;
 		}
 		std::vector<std::vector<int>>* split() {
 			auto children = new std::vector<std::vector<int>>(VIER, std::vector<int>(this->code));
@@ -58,22 +58,18 @@ public:
 		}
 	};
 
-	LQuadTree(const std::vector<std::vector<float>>&);
-	friend std::istream& operator>>(std::istream&, LQuadTree&);
-	std::vector<std::vector<float>*>* compress(PERCENTAGE = PERCENTAGE::LOW);
-	void construct(const std::vector<std::vector<float>>&); 
 	void showListItems();
 
 protected:
 	int codeSize;
 	std::list<Node*> leafNodes;
 
-	void divide(Node*&);
-	bool shallDivide(Node*&);
-	Node* constructNode(Node*&, std::vector<int>&, int = 0, int = 0);
 	Node* mergeNodes(const std::vector<Node*>& nodes);
+	Node* createLowerLeafNode(Node* it, PERCENTAGE percentage, int percPow);
+	Node* constructChildNode(Node*&, std::vector<int>&, int = 0, int = 0);
 	std::vector<Node*>* createLeavesCompressedImage(PERCENTAGE);
-	//std::vector<Node*>* findNeighbours(std::list<Node*>::iterator&);
+
+	virtual ~LQuadTree();
 };
 
 float findAverage(const std::vector<LQuadTree::Node*>&);
