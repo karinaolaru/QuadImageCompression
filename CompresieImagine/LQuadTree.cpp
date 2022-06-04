@@ -69,12 +69,15 @@ void LQuadTree::showListItems() {
 	}
 }
 
-float findAverage(const std::vector<LQuadTree::Node*>& nodes) {
-	float sum = 0;
+Pixel findAverage(const std::vector<LQuadTree::Node*>& nodes) {
+	int sumR = 0, sumG = 0, sumB = 0;
+	int pixels = nodes.size();
 	for (const auto& node : nodes) {
-		sum += node->color;
+		sumR += node->color.R;
+		sumG += node->color.G;
+		sumB += node->color.B;
 	}
-	return sum / nodes.size();
+	return Pixel(sumR / pixels, sumG / pixels, sumB / pixels);
 }
 
 LQuadTree::~LQuadTree() {

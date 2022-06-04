@@ -26,8 +26,46 @@ struct Point2D {
 	Point2D(const Point2D& point) { this->x = point.x; this->y = point.y; }
 };
 
-class LQuadTree
-{
+struct Pixel {
+	unsigned char R, G, B;
+
+	Pixel() : R(0), G(0), B(0) {}
+
+	Pixel(const Pixel& ixel) {
+		this->R = ixel.R;
+		this->G = ixel.G;
+		this->B = ixel.B;
+	}
+
+	Pixel(unsigned char r, unsigned char g, unsigned char b) {
+		this->R = r;
+		this->G = g;
+		this->B = b;
+	}
+
+	Pixel(unsigned char* p) {
+		this->R = p[2];
+		this->G = p[1];
+		this->B = p[0];
+	}
+
+	bool operator==(const Pixel& ixel) {
+		if (this->R != ixel.R || this->G != ixel.G || this->B != ixel.B)
+			return false;
+		return true;
+	}
+
+	bool operator!=(const Pixel& ixel) {
+		return !(*this == ixel);
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, Pixel& pixel) {
+		os << "( " << (int)pixel.R << ", " << (int)pixel.G << ", " << (int)pixel.B << " )";
+		return os;
+	}
+};
+
+class LQuadTree {
 public:
 	struct Node {
 		int level;
@@ -40,9 +78,9 @@ public:
 			Info(const Info& inf) { this->upperLeftCorner = inf.upperLeftCorner; this->edge = inf.edge; }
 		} info;
 		std::vector<int> code;
-		float color;
+		Pixel color;
 		
-		Node(int level, Info info, std::vector<int> code) : level(level), info(info), code(std::move(code)), color(0) {}
+		Node(int level, Info info, std::vector<int> code) : level(level), info(info), code(std::move(code)), color(Pixel()) {}
 		Node(const Node& node) {
 			this->level = node.level;
 			this->info = node.info;
@@ -72,4 +110,4 @@ protected:
 	virtual ~LQuadTree();
 };
 
-float findAverage(const std::vector<LQuadTree::Node*>&);
+Pixel findAverage(const std::vector<LQuadTree::Node*>&);

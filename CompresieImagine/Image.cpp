@@ -1,11 +1,11 @@
 #include "Image.h"
 
-Image::Image(const std::vector<std::vector<float>>& matrix) {
+Image::Image(const std::vector<std::vector<Pixel>>& matrix) {
 	construct(matrix);
 }
 
-Image::Image(std::vector<std::vector<float>*>* matrix, std::vector<Node*>* nodes) {
-	pixelMatrix.resize(matrix->size(), std::vector<float>(matrix->size()));
+Image::Image(std::vector<std::vector<Pixel>*>* matrix, std::vector<Node*>* nodes) {
+	pixelMatrix.resize(matrix->size(), std::vector<Pixel>(matrix->size()));
 	for (int i = 0; i < matrix->size(); i++) {
 		for (int j = 0; j < matrix->size(); j++) {
 			pixelMatrix[i][j] = (*(*matrix)[i])[j];
@@ -16,9 +16,23 @@ Image::Image(std::vector<std::vector<float>*>* matrix, std::vector<Node*>* nodes
 	}
 }
 
-void Image::construct(const std::vector<std::vector<float>>& pixelMatrix) {
-	this->pixelMatrix = pixelMatrix;
+Image::Image(std::string path) {
+	cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
+	if (img.empty()) {
+		return;
+	}
+
+	this->pixelMatrix.resize(img.rows, std::vector<Pixel>(img.cols));
+	for (int i = 0; i < img.rows; i++) {
+		for (int j = 0; j < img.cols; j++) {
+			this->pixelMatrix[i][j] = Pixel(img.ptr(i, j));
+		}
+	}
+	construct();
+}
+
+void Image::construct() {
 	float size = log2(pixelMatrix.size());
 	if (pixelMatrix.size() < 16 || size != (int)size || pixelMatrix.size() != pixelMatrix[0].size()) {
 		return;
@@ -27,6 +41,11 @@ void Image::construct(const std::vector<std::vector<float>>& pixelMatrix) {
 	std::vector<int> firstCode(codeSize, 0);
 	leafNodes.emplace_back(new Node(0, Node::Info(Point2D(0, 0), pixelMatrix.size()), firstCode));
 	divide(leafNodes.front());
+}
+
+void Image::construct(const std::vector<std::vector<Pixel>>& pixelMatrix) {
+	this->pixelMatrix = pixelMatrix;
+	construct();
 }
 
 void Image::divide(Node*& parent) {
@@ -48,7 +67,7 @@ void Image::divide(Node*& parent) {
 }
 
 bool Image::shallDivide(Node*& parent) {
-	int firstElem = pixelMatrix[parent->info.upperLeftCorner.y][parent->info.upperLeftCorner.x];
+	Pixel firstElem = pixelMatrix[parent->info.upperLeftCorner.y][parent->info.upperLeftCorner.x];
 	for (int i = parent->info.upperLeftCorner.y; i < parent->info.upperLeftCorner.y + parent->info.edge; i++) {
 		for (int j = parent->info.upperLeftCorner.x; j < parent->info.upperLeftCorner.x + parent->info.edge; j++) {
 			if (pixelMatrix[i][j] != firstElem) {
@@ -59,11 +78,11 @@ bool Image::shallDivide(Node*& parent) {
 	return false;
 }
 
-std::pair<std::vector<std::vector<float>*>*, std::vector<LQuadTree::Node*>*> Image::compressMatrix(PERCENTAGE percentage) {
+std::pair<std::vector<std::vector<Pixel>*>*, std::vector<LQuadTree::Node*>*> Image::compressMatrix(PERCENTAGE percentage) {
 	int newMatrixSize = pixelMatrix.size() / percentage;
-	auto compressedImage = new std::vector<std::vector<float>*>(newMatrixSize);
+	auto compressedImage = new std::vector<std::vector<Pixel>*>(newMatrixSize);
 	for (int i = 0; i < compressedImage->size(); ++i) {
-		(*compressedImage)[i] = new std::vector<float>(newMatrixSize);
+		(*compressedImage)[i] = new std::vector<Pixel>(newMatrixSize);
 	}
 	std::vector<Node*>* nodes = createLeavesCompressedImage(percentage);
 
@@ -119,20 +138,6 @@ Image* Image::compress(PERCENTAGE percentage) {
 	return nodes;
 }*/
 
-std::istream& operator>>(std::istream& is, Image& image)
-{
-	int size;
-	is >> size;
-	image.pixelMatrix = std::vector<std::vector<float>>(size, std::vector<float>(size));
-	for (size_t i = 0; i < size; ++i) {
-		for (size_t j = 0; j < size; ++j) {
-			is >> image.pixelMatrix[i][j];
-		}
-	}
-	image.construct(image.pixelMatrix);
-	return is;
-}
-
 std::ostream& operator<<(std::ostream& os, Image& image)
 {
 	for (size_t i = 0; i < image.pixelMatrix.size(); ++i) {
@@ -142,4 +147,18 @@ std::ostream& operator<<(std::ostream& os, Image& image)
 		os << "\n";
 	}
 	return os;
+}
+
+void Image::save(std::string path) {
+	cv::Mat img(pixelMatrix.size(), pixelMatrix.size(), 16);
+	unsigned char* p;
+	for (size_t i = 0; i < img.rows; ++i) {
+		for (size_t j = 0; j < img.cols; ++j) {
+			p = img.ptr(i, j);
+			p[2] = pixelMatrix[i][j].R;
+			p[1] = pixelMatrix[i][j].G;
+			p[0] = pixelMatrix[i][j].B;
+		}
+	}
+	cv::imwrite(path, img);
 }
