@@ -4,20 +4,20 @@ Image::Image(const std::vector<std::vector<Pixel>>& matrix) {
 	construct(matrix);
 }
 
-Image::Image(std::vector<std::vector<Pixel>*>* matrix, std::vector<Node*>* nodes) {
+Image::Image(std::vector<std::vector<Pixel>*>* matrix, std::list<Node*>* nodes) {
 	pixelMatrix.resize(matrix->size(), std::vector<Pixel>(matrix->size()));
 	for (int i = 0; i < matrix->size(); i++) {
 		for (int j = 0; j < matrix->size(); j++) {
 			pixelMatrix[i][j] = (*(*matrix)[i])[j];
 		}
 	}
-	for (int i = 0; i < nodes->size(); i++) {
-		this->leafNodes.emplace_back(new Node(*(*nodes)[i]));
+	for (const auto& it : *nodes) {
+		this->leafNodes.emplace_back(new Node(*it));
 	}
 	this->codeSize = log2(matrix->size());
 	int currMaxLevel = 0;
-	for (int i = 0; i < nodes->size(); i++) {
-		if ((*nodes)[i]->level > currMaxLevel) currMaxLevel = (*nodes)[i]->level;
+	for (const auto& it : *nodes) {
+		if (it->level > currMaxLevel) currMaxLevel = it->level;
 	}
 	this->maxLevel = currMaxLevel;
 }
@@ -67,7 +67,12 @@ void Image::divide(Node*& parent) {
 	std::vector<std::vector<int>>* codes = parent->split();
 	std::vector<Node*> children({ constructChildNode(parent, (*codes)[0]), constructChildNode(parent, (*codes)[1], parent->info.edge / 2),
 								  constructChildNode(parent, (*codes)[2], 0, parent->info.edge / 2), constructChildNode(parent, (*codes)[3], parent->info.edge / 2, parent->info.edge / 2) });
-	leafNodes.remove(parent);
+	for (auto it = leafNodes.begin(); it != leafNodes.end(); ++it) {
+		if (*it != parent) continue;
+		leafNodes.erase(it);
+		break;
+	}
+	
 	delete codes;
 
 	for (auto& child : children) {
@@ -88,8 +93,8 @@ bool Image::shallDivide(Node*& parent) {
 	return false;
 }
 
-std::vector<LQuadTree::Node*>* Image::createLeavesCompressedImage(int noLevelsToDelete) {
-	auto nodes = new std::vector<Node*>();
+std::list<LQuadTree::Node*>* Image::createLeavesCompressedImage(int noLevelsToDelete) {
+	auto nodes = new std::list<Node*>();
 	std::vector<int> currentIndexInLevel(codeSize + 1);
 	std::vector<Node*> neighbours(VIER);
 
@@ -120,12 +125,12 @@ std::vector<LQuadTree::Node*>* Image::createLeavesCompressedImage(int noLevelsTo
 	return nodes;
 }
 
-std::pair<std::vector<std::vector<Pixel>*>*, std::vector<LQuadTree::Node*>*> Image::compressMatrix(int noLevelsToDelete) {
+std::pair<std::vector<std::vector<Pixel>*>*, std::list<LQuadTree::Node*>*> Image::compressMatrix(int noLevelsToDelete) {
 	auto compressedImage = new std::vector<std::vector<Pixel>*>(pixelMatrix.size());
 	for (int i = 0; i < compressedImage->size(); ++i) {
 		(*compressedImage)[i] = new std::vector<Pixel>(pixelMatrix.size());
 	}
-	std::vector<Node*>* nodes = createLeavesCompressedImage(noLevelsToDelete);
+	std::list<Node*>* nodes = createLeavesCompressedImage(noLevelsToDelete);
 
 	for (auto it = nodes->begin(); it != nodes->end(); ++it) {
 		for (int i = (*it)->info.upperLeftCorner.y; i < (*it)->info.upperLeftCorner.y + (*it)->info.edge; ++i) {
