@@ -22,7 +22,7 @@ Image::Image(std::vector<std::vector<Pixel>*>* matrix, std::vector<Node*>* nodes
 	this->maxLevel = currMaxLevel;
 }
 
-Image::Image(std::string path) {
+/*Image::Image(std::string path) {
 	cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
 	if (img.empty()) {
@@ -36,7 +36,7 @@ Image::Image(std::string path) {
 		}
 	}
 	construct();
-}
+}*/
 
 void Image::construct() {
 	float size = log2(pixelMatrix.size());
@@ -55,7 +55,7 @@ void Image::construct(const std::vector<std::vector<Pixel>>& pixelMatrix) {
 	construct();
 }
 
-void Image::divide(Node*& parent) {
+/*void Image::divide(Node*& parent) {
 	if ((parent->info.edge == 1) || (shallDivide(parent) == false)) {
 		parent->color = pixelMatrix[parent->info.upperLeftCorner.y][parent->info.upperLeftCorner.x];
 		if (maxLevel < parent->level) {
@@ -74,7 +74,7 @@ void Image::divide(Node*& parent) {
 		leafNodes.emplace_back(child);
 		divide(child);
 	}
-}
+}*/
 
 bool Image::shallDivide(Node*& parent) {
 	Pixel firstElem = pixelMatrix[parent->info.upperLeftCorner.y][parent->info.upperLeftCorner.x];
@@ -172,7 +172,7 @@ std::ostream& operator<<(std::ostream& os, Image& image)
 	return os;
 }
 
-void Image::save(std::string path) {
+/* void Image::save(std::string path) {
 	cv::Mat img(pixelMatrix.size(), pixelMatrix.size(), 16);
 	unsigned char* p;
 	for (size_t i = 0; i < img.rows; ++i) {
@@ -184,4 +184,4 @@ void Image::save(std::string path) {
 		}
 	}
 	cv::imwrite(path, img);
-}
+}*/

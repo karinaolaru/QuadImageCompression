@@ -16,7 +16,7 @@ struct Point2D {
 	Point2D(const Point2D& point) { this->x = point.x; this->y = point.y; }
 };
 
-struct Pixel {
+/*struct Pixel {
 	unsigned char R, G, B;
 
 	Pixel() : R(0), G(0), B(0) {}
@@ -53,9 +53,9 @@ struct Pixel {
 		os << "( " << (int)pixel.R << ", " << (int)pixel.G << ", " << (int)pixel.B << " )";
 		return os;
 	}
-};
+};*/
 
-/*struct Pixel {
+struct Pixel {
 	int c;
 
 	Pixel() : c(0) {}
@@ -82,7 +82,7 @@ struct Pixel {
 		os << (int)pixel.c << " ";
 		return os;
 	}
-};*/
+};
 
 class LQuadTree {
 public:
