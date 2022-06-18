@@ -13,8 +13,8 @@ private:
 
 	void divide(Node*&);
 	bool shallDivide(Node*&);
-	std::pair<std::vector<std::vector<Pixel>*>*, std::vector<Node*>*> compressMatrix(int = 2);
-	std::vector<Node*>* createLeavesCompressedImage(int);
+	std::pair<std::vector<std::vector<Pixel>*>*, std::list<Node*>*> compressMatrix(int = 2);
+	std::list<Node*>* createLeavesCompressedImage(int);
 
 public:
 	Image() {};
@@ -25,7 +25,7 @@ public:
 		}
 	}
 	Image(const std::vector<std::vector<Pixel>>&);
-	Image(std::vector<std::vector<Pixel>*>*, std::vector<Node*>*);
+	Image(std::vector<std::vector<Pixel>*>*, std::list<Node*>*);
 	Image(std::string);
 
 	int getMaxLevel() {
