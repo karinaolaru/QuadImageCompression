@@ -28,6 +28,10 @@ public:
 	Image(std::vector<std::vector<Pixel>*>*, std::vector<Node*>*);
 	Image(std::string);
 
+	int getMaxLevel() {
+		return maxLevel;
+	}
+
 	friend std::ostream& operator<<(std::ostream&, Image&);
 	Image* compress(int noLevelsToDelete = 2);
 	void construct();
