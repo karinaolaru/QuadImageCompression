@@ -14,9 +14,15 @@ Image::Image(std::vector<std::vector<Pixel>*>* matrix, std::vector<Node*>* nodes
 	for (int i = 0; i < nodes->size(); i++) {
 		this->leafNodes.emplace_back(new Node(*(*nodes)[i]));
 	}
+	this->codeSize = log2(matrix->size());
+	int currMaxLevel = 0;
+	for (int i = 0; i < nodes->size(); i++) {
+		if ((*nodes)[i]->level > currMaxLevel) currMaxLevel = (*nodes)[i]->level;
+	}
+	this->maxLevel = currMaxLevel;
 }
 
-Image::Image(std::string path) {
+/*Image::Image(std::string path) {
 	cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
 	if (img.empty()) {
@@ -30,17 +36,18 @@ Image::Image(std::string path) {
 		}
 	}
 	construct();
-}
+}*/
 
 void Image::construct() {
 	float size = log2(pixelMatrix.size());
-	if (pixelMatrix.size() < 16 || size != (int)size || pixelMatrix.size() != pixelMatrix[0].size()) {
+	if (pixelMatrix.size() < 8 || size != (int)size || pixelMatrix.size() != pixelMatrix[0].size()) {
 		return;
 	}
 	codeSize = (int)size;
 	std::vector<int> firstCode(codeSize, 0);
 	leafNodes.emplace_back(new Node(0, Node::Info(Point2D(0, 0), pixelMatrix.size()), firstCode));
 	divide(leafNodes.front());
+	std::cout << "Image has been loaded\n";
 }
 
 void Image::construct(const std::vector<std::vector<Pixel>>& pixelMatrix) {
@@ -51,6 +58,9 @@ void Image::construct(const std::vector<std::vector<Pixel>>& pixelMatrix) {
 void Image::divide(Node*& parent) {
 	if ((parent->info.edge == 1) || (shallDivide(parent) == false)) {
 		parent->color = pixelMatrix[parent->info.upperLeftCorner.y][parent->info.upperLeftCorner.x];
+		if (maxLevel < parent->level) {
+			maxLevel = parent->level;
+		}
 		return;
 	}
 
@@ -78,17 +88,52 @@ bool Image::shallDivide(Node*& parent) {
 	return false;
 }
 
-std::pair<std::vector<std::vector<Pixel>*>*, std::vector<LQuadTree::Node*>*> Image::compressMatrix(PERCENTAGE percentage) {
-	int newMatrixSize = pixelMatrix.size() / percentage;
-	auto compressedImage = new std::vector<std::vector<Pixel>*>(newMatrixSize);
-	for (int i = 0; i < compressedImage->size(); ++i) {
-		(*compressedImage)[i] = new std::vector<Pixel>(newMatrixSize);
+std::vector<LQuadTree::Node*>* Image::createLeavesCompressedImage(int noLevelsToDelete) {
+	auto nodes = new std::vector<Node*>();
+	std::vector<int> currentIndexInLevel(codeSize + 1);
+	std::vector<Node*> neighbours(VIER);
+
+	for (const auto& it : this->leafNodes) {
+		if (it->level <= maxLevel - noLevelsToDelete) {
+			nodes->emplace_back(new Node(*it));
+			continue;
+		}
+
+		currentIndexInLevel[it->level]++;
+		nodes->emplace_back(new Node(*it));
+		for (int level = it->level; currentIndexInLevel[level] == VIER && level >= 0; --level) {
+			currentIndexInLevel[level] = 0;
+			if (level - 1 > 0) {
+				currentIndexInLevel[level - 1]++;
+			}
+			
+			for (int i = 0; i < VIER; i++) {
+				neighbours[i] = nodes->back();
+				nodes->pop_back();
+			}
+			Node* merged = mergeNodes(neighbours);
+			for (int i = 0; i < VIER; i++) {
+				delete neighbours[i];
+			}
+			nodes->emplace_back(merged);
+		}
 	}
-	std::vector<Node*>* nodes = createLeavesCompressedImage(percentage);
+	return nodes;
+}
+
+std::pair<std::vector<std::vector<Pixel>*>*, std::vector<LQuadTree::Node*>*> Image::compressMatrix(int noLevelsToDelete) {
+	auto compressedImage = new std::vector<std::vector<Pixel>*>(pixelMatrix.size());
+	for (int i = 0; i < compressedImage->size(); ++i) {
+		(*compressedImage)[i] = new std::vector<Pixel>(pixelMatrix.size());
+	}
+	std::vector<Node*>* nodes = createLeavesCompressedImage(noLevelsToDelete);
 
 	for (auto it = nodes->begin(); it != nodes->end(); ++it) {
 		for (int i = (*it)->info.upperLeftCorner.y; i < (*it)->info.upperLeftCorner.y + (*it)->info.edge; ++i) {
 			for (int j = (*it)->info.upperLeftCorner.x; j < (*it)->info.upperLeftCorner.x + (*it)->info.edge; ++j) {
+				if (i >= pixelMatrix.size() || j >= pixelMatrix.size()) {
+					std::cout << "err";
+				}
 				(*(*compressedImage)[i])[j] = (*it)->color;
 			}
 		}
@@ -97,8 +142,12 @@ std::pair<std::vector<std::vector<Pixel>*>*, std::vector<LQuadTree::Node*>*> Ima
 	return { compressedImage, nodes };
 }
 
-Image* Image::compress(PERCENTAGE percentage) {
-	auto compressRes = compressMatrix(percentage);
+Image* Image::compress(int noLevelsToDelete) {
+	if (noLevelsToDelete > maxLevel) {
+		return nullptr;
+	}
+
+	auto compressRes = compressMatrix(noLevelsToDelete);
 	Image* newImage = new Image(compressRes.first, compressRes.second);
 	for (int i = 0; i < compressRes.first->size(); i++) {
 		delete (*compressRes.first)[i];
@@ -113,31 +162,6 @@ Image* Image::compress(PERCENTAGE percentage) {
 	return newImage;
 }
 
-/*std::vector<LQuadTree::Node*>* Image::createLeavesCompressedImage(PERCENTAGE percentage) {
-	auto nodes = new std::vector<Node*>();
-	std::vector<int> currentIndexInLevel(codeSize + 1);
-	std::vector<Node*> neighbours(VIER);
-
-	for (const auto& it : this->leafNodes) {
-		if (it->info.edge >= percentage) {
-			nodes->emplace_back(new Node(*it));
-			continue;
-		}
-
-		currentIndexInLevel[it->level]++;
-		nodes->emplace_back(new Node(*it));
-		for (int level = it->level; currentIndexInLevel[level] == VIER && level >= 0; --level) {
-			currentIndexInLevel[level] = 0;
-			for (int i = 0; i < VIER; i++) {
-				neighbours[i] = nodes->back();
-				nodes->pop_back();
-			}
-			nodes->emplace_back(mergeNodes(neighbours));
-		}
-	}
-	return nodes;
-}*/
-
 std::ostream& operator<<(std::ostream& os, Image& image)
 {
 	for (size_t i = 0; i < image.pixelMatrix.size(); ++i) {
@@ -149,7 +173,7 @@ std::ostream& operator<<(std::ostream& os, Image& image)
 	return os;
 }
 
-void Image::save(std::string path) {
+/*void Image::save(std::string path) {
 	cv::Mat img(pixelMatrix.size(), pixelMatrix.size(), 16);
 	unsigned char* p;
 	for (size_t i = 0; i < img.rows; ++i) {
@@ -161,4 +185,4 @@ void Image::save(std::string path) {
 		}
 	}
 	cv::imwrite(path, img);
-}
+}*/

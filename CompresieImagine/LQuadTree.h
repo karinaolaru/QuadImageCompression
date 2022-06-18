@@ -8,16 +8,6 @@
 
 #define VIER 4 
 
-enum ERRORS {
-	BAD_SIZE = 69
-};
-
-enum PERCENTAGE {
-	LOW = 2, 
-	MEDIUM = 4, 
-	HIGH = 8
-};
-
 struct Point2D {
 	int x, y;
 
@@ -26,7 +16,7 @@ struct Point2D {
 	Point2D(const Point2D& point) { this->x = point.x; this->y = point.y; }
 };
 
-struct Pixel {
+/*struct Pixel {
 	unsigned char R, G, B;
 
 	Pixel() : R(0), G(0), B(0) {}
@@ -61,6 +51,35 @@ struct Pixel {
 
 	friend std::ostream& operator<<(std::ostream& os, Pixel& pixel) {
 		os << "( " << (int)pixel.R << ", " << (int)pixel.G << ", " << (int)pixel.B << " )";
+		return os;
+	}
+};*/
+
+struct Pixel {
+	int c;
+
+	Pixel() : c(0) {}
+
+	Pixel(const Pixel& ixel) {
+		this->c = ixel.c;
+	}
+
+	Pixel(int c) {
+		this->c = c;
+	}
+
+	bool operator==(const Pixel& ixel) {
+		if (this->c != ixel.c)
+			return false;
+		return true;
+	}
+
+	bool operator!=(const Pixel& ixel) {
+		return !(*this == ixel);
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, Pixel& pixel) {
+		os << (int)pixel.c << " ";
 		return os;
 	}
 };
@@ -102,10 +121,9 @@ protected:
 	int codeSize;
 	std::list<Node*> leafNodes;
 
-	Node* mergeNodes(const std::vector<Node*>& nodes);
-	Node* createLowerLeafNode(Node* it, PERCENTAGE percentage, int percPow);
+	Node* mergeNodes(const std::vector<Node*>&);
+	Node* createLowerLeafNode(Node*, int, int);
 	Node* constructChildNode(Node*&, std::vector<int>&, int = 0, int = 0);
-	std::vector<Node*>* createLeavesCompressedImage(PERCENTAGE);
 
 	virtual ~LQuadTree();
 };

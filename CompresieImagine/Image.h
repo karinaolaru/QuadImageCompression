@@ -9,10 +9,12 @@
 class Image : public LQuadTree {
 private:
 	std::vector<std::vector<Pixel>> pixelMatrix;
+ 	int maxLevel = 0;
 
 	void divide(Node*&);
 	bool shallDivide(Node*&);
-	std::pair<std::vector<std::vector<Pixel>*>*, std::vector<Node*>*> compressMatrix(PERCENTAGE = PERCENTAGE::LOW);
+	std::pair<std::vector<std::vector<Pixel>*>*, std::vector<Node*>*> compressMatrix(int = 2);
+	std::vector<Node*>* createLeavesCompressedImage(int);
 
 public:
 	Image() {};
@@ -27,7 +29,7 @@ public:
 	Image(std::string);
 
 	friend std::ostream& operator<<(std::ostream&, Image&);
-	Image* compress(PERCENTAGE = PERCENTAGE::LOW);
+	Image* compress(int noLevelsToDelete = 2);
 	void construct();
 	void construct(const std::vector<std::vector<Pixel>>&);
 	void save(std::string path);
