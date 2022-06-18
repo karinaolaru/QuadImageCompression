@@ -67,7 +67,13 @@ void Image::divide(Node*& parent) {
 	std::vector<std::vector<int>>* codes = parent->split();
 	std::vector<Node*> children({ constructChildNode(parent, (*codes)[0]), constructChildNode(parent, (*codes)[1], parent->info.edge / 2),
 								  constructChildNode(parent, (*codes)[2], 0, parent->info.edge / 2), constructChildNode(parent, (*codes)[3], parent->info.edge / 2, parent->info.edge / 2) });
-	leafNodes.remove(parent);
+	
+	for (auto it = leafNodes.begin(); it != leafNodes.end(); ++it) {
+		if (*it != parent) continue;
+		leafNodes.erase(it);
+		break;
+	}
+	
 	delete codes;
 
 	for (auto& child : children) {

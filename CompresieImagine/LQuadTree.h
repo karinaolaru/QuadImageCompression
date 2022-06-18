@@ -119,7 +119,7 @@ public:
 
 protected:
 	int codeSize;
-	std::list<Node*> leafNodes;
+	std::vector<Node*> leafNodes;
 
 	Node* mergeNodes(const std::vector<Node*>&);
 	Node* createLowerLeafNode(Node*, int, int);
