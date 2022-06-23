@@ -5,11 +5,11 @@
 #include <ctime>
 #include <iomanip>
 
-/*int main() {
+int main() {
     std::chrono::time_point<std::chrono::system_clock> start, end; 
 
     start = std::chrono::system_clock::now();
-    Image image("D:\\FACULTATE\\ANUL I\\SEMESTRUL II\\Structuri de date\\CompresieImagine\\hibi_1024x1024.png");
+    Image image("D:\\FACULTATE\\ANUL I\\SEMESTRUL II\\Structuri de date\\CompresieImagine\\hibi_256x256.png");
     end = std::chrono::system_clock::now();
 
     std::chrono::duration<double> elapsed_seconds = end - start;
@@ -33,9 +33,9 @@
     }
 
     return 0;
-}*/
+}
 
-int main() {
+/*int main() {
     std::ifstream f("date.txt");
     std::vector<std::vector<Pixel>> matrix;
     int n, x;
@@ -56,4 +56,4 @@ int main() {
     std::cout << *com;
 
     return 0;
-}
+}*/

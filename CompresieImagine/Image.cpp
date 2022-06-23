@@ -37,7 +37,7 @@ Image::Image(std::vector<std::vector<Pixel>*>* matrix, std::vector<Node*>* nodes
 
 
 
-/*Image::Image(std::string path) {
+Image::Image(std::string path) {
 	cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
 
 	if (img.empty()) {
@@ -51,7 +51,7 @@ Image::Image(std::vector<std::vector<Pixel>*>* matrix, std::vector<Node*>* nodes
 		}
 	}
 	construct();
-}*/
+}
 
 void Image::construct() {
 	float size = log2(pixelMatrix.size());
@@ -278,7 +278,7 @@ std::ostream& operator<<(std::ostream& os, Image& image)
 	return os;
 }
 
-/* void Image::save(std::string path) {
+void Image::save(std::string path) {
 	cv::Mat img(pixelMatrix.size(), pixelMatrix.size(), 16);
 	unsigned char* p;
 	for (size_t i = 0; i < img.rows; ++i) {
@@ -290,4 +290,4 @@ std::ostream& operator<<(std::ostream& os, Image& image)
 		}
 	}
 	cv::imwrite(path, img);
-}*/
+}

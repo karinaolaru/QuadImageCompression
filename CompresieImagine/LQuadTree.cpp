@@ -52,7 +52,7 @@ void LQuadTree::showListItems() {
 	}
 }
 
-/* Pixel findAverage(const std::vector<LQuadTree::Node*>& nodes) {
+Pixel findAverage(const std::vector<LQuadTree::Node*>& nodes) {
 	int sumR = 0, sumG = 0, sumB = 0;
 	int pixels = nodes.size();
 	for (const auto& node : nodes) {
@@ -61,16 +61,16 @@ void LQuadTree::showListItems() {
 		sumB += node->color.B;
 	}
 	return Pixel((unsigned char)(sumR / pixels), (unsigned char)(sumG / pixels), (unsigned char)(sumB / pixels));
-}*/
+}
 
-Pixel findAverage(const std::vector<LQuadTree::Node*>& nodes) {
+/*Pixel findAverage(const std::vector<LQuadTree::Node*>& nodes) {
 	int sumR = 0;
 	int pixels = nodes.size();
 	for (const auto& node : nodes) {
 		sumR += node->color.c;
 	}
 	return Pixel(sumR / pixels);
-}
+}*/
 
 LQuadTree::~LQuadTree() {
 	for (auto& item : leafNodes) {
