@@ -51,9 +51,9 @@ int main() {
     Image img(matrix);
     img.showListItems();
     std::cout << img << "\n";
-    /*Image* com = img.compress();
+    Image* com = img.compress();
     com->showListItems();
-    std::cout << *com;*/
+    std::cout << *com;
 
     return 0;
 }

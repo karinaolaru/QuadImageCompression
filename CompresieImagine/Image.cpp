@@ -114,6 +114,7 @@ void Image::divide() {
 						nodes[j] = newActiveNode;
 					}
 				}
+				maxLevel = maxLevel < codeSize - depth ? codeSize - depth : maxLevel;
 				insert(calculateCode(row, col, codeSize));
 			}
 			int power = pow(2, currNode->depth);
@@ -191,6 +192,10 @@ void Image::insert(std::vector<int> code) {
 		std::vector<std::vector<int>>* codes = (*it)->split();
 		std::vector<Node*> children({ constructChildNode(*it, (*codes)[0]), constructChildNode(*it, (*codes)[1], (*it)->info.edge / 2),
 								constructChildNode(*it, (*codes)[2], 0, (*it)->info.edge / 2), constructChildNode(*it, (*codes)[3], (*it)->info.edge / 2, (*it)->info.edge / 2) });
+		children[0]->color = pixelMatrix[(*it)->info.upperLeftCorner.y][(*it)->info.upperLeftCorner.x];
+		children[1]->color = pixelMatrix[(*it)->info.upperLeftCorner.y][(*it)->info.upperLeftCorner.x + (*it)->info.edge / 2];
+		children[2]->color = pixelMatrix[(*it)->info.upperLeftCorner.y + (*it)->info.edge / 2][(*it)->info.upperLeftCorner.x];
+		children[3]->color = pixelMatrix[(*it)->info.upperLeftCorner.y + (*it)->info.edge / 2][(*it)->info.upperLeftCorner.x + (*it)->info.edge / 2];
 		leafNodes.insert(it, children[0]);
 		leafNodes.insert(it, children[1]);
 		leafNodes.insert(it, children[2]);
