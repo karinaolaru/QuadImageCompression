@@ -11,8 +11,11 @@ private:
 	std::vector<std::vector<Pixel>> pixelMatrix;
  	int maxLevel = 0;
 
-	void divide(Node*&);
-	bool shallDivide(Node*&);
+	void insert(std::vector<int>);
+	static std::vector<int> calculateCode(int, int, int);
+	static std::vector<int> base2Transformation(int, int);
+	void divide();
+	//bool shallDivide(Node*&);
 	std::pair<std::vector<std::vector<Pixel>*>*, std::vector<Node*>*> compressMatrix(int = 2);
 	std::vector<Node*>* createLeavesCompressedImage(int);
 
@@ -38,4 +41,3 @@ public:
 	void construct(const std::vector<std::vector<Pixel>>&);
 	void save(std::string path);
 };
-

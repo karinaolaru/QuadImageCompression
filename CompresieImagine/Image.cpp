@@ -1,4 +1,17 @@
 #include "Image.h"
+#include <memory>
+
+int compareVectors(std::vector<int> v1, std::vector<int> v2) {
+	for (int i = 0; i < v1.size(); i++) {
+		if (v1[i] > v2[i]) {
+			return -1;
+		}
+		else if (v1[i] < v2[i]) {
+			return 1;
+		}
+	}
+	return 0;
+}
 
 Image::Image(const std::vector<std::vector<Pixel>>& matrix) {
 	construct(matrix);
@@ -21,6 +34,8 @@ Image::Image(std::vector<std::vector<Pixel>*>* matrix, std::vector<Node*>* nodes
 	}
 	this->maxLevel = currMaxLevel;
 }
+
+
 
 /*Image::Image(std::string path) {
 	cv::Mat img = cv::imread(path, cv::IMREAD_COLOR);
@@ -46,7 +61,7 @@ void Image::construct() {
 	codeSize = (int)size;
 	std::vector<int> firstCode(codeSize, 0);
 	leafNodes.emplace_back(new Node(0, Node::Info(Point2D(0, 0), pixelMatrix.size()), firstCode));
-	divide(leafNodes.front());
+	divide();
 	std::cout << "Image has been loaded\n";
 }
 
@@ -55,28 +70,70 @@ void Image::construct(const std::vector<std::vector<Pixel>>& pixelMatrix) {
 	construct();
 }
 
-/*void Image::divide(Node*& parent) {
-	if ((parent->info.edge == 1) || (shallDivide(parent) == false)) {
-		parent->color = pixelMatrix[parent->info.upperLeftCorner.y][parent->info.upperLeftCorner.x];
-		if (maxLevel < parent->level) {
-			maxLevel = parent->level;
+void Image::divide() {
+	struct DivNode {
+		Pixel color;
+		int depth = 0;
+		std::shared_ptr<DivNode> parent;
+		std::vector<int> code;
+
+		DivNode(){}
+		DivNode(std::vector<int> m_code, Pixel m_color, int m_depth, std::shared_ptr<DivNode> m_parent) {
+			color = m_color;
+			depth = m_depth;
+			parent = m_parent;
+			code = m_code;
 		}
-		return;
+		DivNode(Pixel m_color, int m_depth, std::shared_ptr<DivNode> m_parent) {
+			color = m_color;
+			depth = m_depth;
+			parent = m_parent;
+		}
+	};
+
+	std::shared_ptr<DivNode> firstNode = std::make_shared<DivNode>(std::vector<int>(codeSize, 0), pixelMatrix[0][0], codeSize, nullptr);
+	std::vector<std::shared_ptr<DivNode>> nodes(pixelMatrix.size(), nullptr);
+	int edge = pow(2, codeSize - 1);
+	for (int i = 0; i < edge; i++) {
+		nodes[i] = firstNode;
 	}
-
-	std::vector<std::vector<int>>* codes = parent->split();
-	std::vector<Node*> children({ constructChildNode(parent, (*codes)[0]), constructChildNode(parent, (*codes)[1], parent->info.edge / 2),
-								  constructChildNode(parent, (*codes)[2], 0, parent->info.edge / 2), constructChildNode(parent, (*codes)[3], parent->info.edge / 2, parent->info.edge / 2) });
-	leafNodes.remove(parent);
-	delete codes;
-
-	for (auto& child : children) {
-		leafNodes.emplace_back(child);
-		divide(child);
+	std::shared_ptr<DivNode> currNode;
+	int xt, yt, depth = 0;
+	for (int row = 0; row < edge * 2; row++) {
+		for (int col = 0; col < edge * 2; col++) {
+			currNode = nodes[col / 2];
+			if (currNode->color != pixelMatrix[row][col]) {
+				xt = col; yt = row; depth = 0;
+				while (xt % 2 == 0 && yt % 2 == 0 && depth < codeSize) {
+					xt /= 2; yt /= 2; depth++;
+				}
+				if (depth != 0) {
+					std::shared_ptr<DivNode> newActiveNode = std::make_shared<DivNode>(pixelMatrix[row][col],depth,currNode);
+					int end = pow(2, depth - 1);
+					for (int j = col / 2; j < col / 2 + end; j++) {
+						nodes[j] = newActiveNode;
+					}
+				}
+				insert(calculateCode(row, col, codeSize));
+			}
+			int power = pow(2, currNode->depth);
+			int T = 0;
+			while ((row + 1) % power == 0 && (col + 1) % power == 0) {
+				T = currNode->depth;
+				currNode = currNode->parent;
+				if (currNode == nullptr)
+					break;
+				power = pow(2, currNode->depth);
+			}
+			power = pow(2, T - 1);
+			for (int i = col / 2; i >= col / 2 - power + 1; i--) {
+				nodes[i] = currNode;
+			}
+		}
 	}
-}*/
+}
 
-bool Image::shallDivide(Node*& parent) {
+/*bool Image::shallDivide(Node*& parent) {
 	Pixel firstElem = pixelMatrix[parent->info.upperLeftCorner.y][parent->info.upperLeftCorner.x];
 	for (int i = parent->info.upperLeftCorner.y; i < parent->info.upperLeftCorner.y + parent->info.edge; i++) {
 		for (int j = parent->info.upperLeftCorner.x; j < parent->info.upperLeftCorner.x + parent->info.edge; j++) {
@@ -86,7 +143,7 @@ bool Image::shallDivide(Node*& parent) {
 		}
 	}
 	return false;
-}
+}*/
 
 std::vector<LQuadTree::Node*>* Image::createLeavesCompressedImage(int noLevelsToDelete) {
 	auto nodes = new std::vector<Node*>();
@@ -118,6 +175,50 @@ std::vector<LQuadTree::Node*>* Image::createLeavesCompressedImage(int noLevelsTo
 		}
 	}
 	return nodes;
+}
+
+void Image::insert(std::vector<int> code) {
+	std::list<Node*>::iterator it;
+	while (true) {
+		for (it = leafNodes.begin(); it != leafNodes.end(); ++it) {
+			if (compareVectors((*it)->code, code) == -1) break;
+		}
+		--it;
+		if (compareVectors((*it)->code, code) == 0) {
+			return;
+		}
+		
+		std::vector<std::vector<int>>* codes = (*it)->split();
+		std::vector<Node*> children({ constructChildNode(*it, (*codes)[0]), constructChildNode(*it, (*codes)[1], (*it)->info.edge / 2),
+								constructChildNode(*it, (*codes)[2], 0, (*it)->info.edge / 2), constructChildNode(*it, (*codes)[3], (*it)->info.edge / 2, (*it)->info.edge / 2) });
+		leafNodes.insert(it, children[0]);
+		leafNodes.insert(it, children[1]);
+		leafNodes.insert(it, children[2]);
+		leafNodes.insert(it, children[3]);
+		leafNodes.remove(*it);
+	}
+}
+
+std::vector<int> Image::base2Transformation(int nr, int codeSize) {
+	std::vector<int> newNr(codeSize, 0);
+	int i = 1, r;
+	while (nr > 0) {
+		r = nr % 2;
+		newNr[newNr.size() - i] = r;
+		nr /= 2;
+		i++;
+	}
+	return newNr;
+}
+
+std::vector<int> Image::calculateCode(int row, int col, int codeSize) {
+	std::vector<int> code(codeSize);
+	std::vector<int> rowBase2 = base2Transformation(row, codeSize);
+	std::vector<int> colBase2 = base2Transformation(col, codeSize);
+	for (int i = 0; i < rowBase2.size(); i++) {
+		code[i] = colBase2[i] + rowBase2[i] * 2;
+	}
+	return code;
 }
 
 std::pair<std::vector<std::vector<Pixel>*>*, std::vector<LQuadTree::Node*>*> Image::compressMatrix(int noLevelsToDelete) {
